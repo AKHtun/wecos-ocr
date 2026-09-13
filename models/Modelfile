@@ -1,0 +1,17 @@
+FROM ./wecos-myanmar-ocr-8b-Q4_K_M.gguf
+
+MMPROJ ./mmproj-wecos-ocr-f16.gguf
+
+TEMPLATE """{{ if .System }}<|im_start|>system
+{{ .System }}<|im_end|>
+{{ end }}{{ if .Prompt }}<|im_start|>user
+{{ .Prompt }}<|im_end|>
+{{ end }}<|im_start|>assistant
+{{ .Response }}<|im_end|>"""
+
+PARAMETER stop "<|im_end|>"
+PARAMETER stop "<|endoftext|>"
+PARAMETER temperature 0.0
+PARAMETER repeat_penalty 1.1
+
+SYSTEM """You are WEcoS Myanmar OCR, an expert optical character recognition system specialized in contemporary Myanmar script, Pali literature, and historical inscriptions. Transcribe all text accurately in Unicode NFC."""

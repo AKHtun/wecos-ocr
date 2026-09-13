@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "wecos-ocr"
+version = "0.1.0"
+description = "Sovereign Myanmar OCR, Historical Epigraphical Decipherment & Syllable Engine"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [
+    { name = "AKHtun", email = "aungkhainghtun.akh@gmail.com" }
+]
+
+[project.urls]
+Homepage = "https://github.com/AKHtun/wecos-ocr"
+Repository = "https://github.com/AKHtun/wecos-ocr"
+Issues = "https://github.com/AKHtun/wecos-ocr/issues"
+"Hugging Face" = "https://huggingface.co/AKHtun/wecos-myanmar-ocr-8b-GGUF"
+keywords = ["ocr", "myanmar", "burmese", "epigraphy", "pali", "syllables", "vlm", "nlp"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Text Processing :: Linguistic",
+]
+dependencies = [
+    "pillow>=9.5.0",
+    "numpy>=1.24.0",
+]
+
+[project.optional-dependencies]
+pdf = ["pymupdf>=1.23.0"]
+transformers = ["torch>=2.0.0", "transformers>=4.40.0"]
+all = ["pymupdf>=1.23.0", "torch>=2.0.0", "transformers>=4.40.0", "pytesseract>=0.3.10"]
+
+[project.scripts]
+wecos-ocr = "wecos_ocr.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["wecos_ocr"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
