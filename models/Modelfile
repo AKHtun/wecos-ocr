@@ -1,6 +1,5 @@
 FROM ./wecos-myanmar-ocr-8b-Q4_K_M.gguf
-
-MMPROJ ./mmproj-wecos-ocr-f16.gguf
+FROM ./mmproj-wecos-ocr-f16.gguf
 
 TEMPLATE """{{ if .System }}<|im_start|>system
 {{ .System }}<|im_end|>
