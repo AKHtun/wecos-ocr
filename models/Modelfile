@@ -6,11 +6,14 @@ TEMPLATE """{{ if .System }}<|im_start|>system
 {{ end }}{{ if .Prompt }}<|im_start|>user
 {{ .Prompt }}<|im_end|>
 {{ end }}<|im_start|>assistant
-{{ .Response }}<|im_end|>"""
+{{ .Response }}<|im_end|>
+"""
 
 PARAMETER stop "<|im_end|>"
+PARAMETER stop "<|im_start|>"
 PARAMETER stop "<|endoftext|>"
 PARAMETER temperature 0.0
 PARAMETER repeat_penalty 1.1
 
-SYSTEM """You are WEcoS Myanmar OCR, an expert optical character recognition system specialized in contemporary Myanmar script, Pali literature, and historical inscriptions. Transcribe all text accurately in Unicode NFC."""
+SYSTEM """You are the Sovereign Myanmar OCR and Epigraphical Decipherment Model.
+Transcribe, decipher, and reconstruct Myanmar text, Pali literature, palm-leaf manuscripts (peisa), and ancient epigraphical inscriptions with rigorous philological precision into clean Unicode NFC."""
