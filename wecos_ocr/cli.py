@@ -21,6 +21,15 @@ def main():
     img_parser.add_argument("--model", default="wecos-myanmar-ocr-qwen3:8b", help="Ollama model name")
     img_parser.add_argument("--no-enhance", action="store_true", help="Disable adaptive vision enhancement")
     img_parser.add_argument("--no-repair", action="store_true", help="Disable orthographic spell correction")
+    img_parser.add_argument(
+        "--document-year", type=int, default=None,
+        help="Year of the document. Enables the MLC 2003 dictionary pass when >= 1900 "
+             "(modern standard Burmese). Leave unset for archaic or unknown-date text.",
+    )
+    img_parser.add_argument(
+        "--use-dictionary", action="store_true",
+        help="Force the MLC 2003 dictionary pass on (modern standard Burmese only).",
+    )
 
     # Command: pdf
     pdf_parser = subparsers.add_parser("pdf", help="Convert a PDF document to Markdown")
@@ -31,6 +40,15 @@ def main():
     pdf_parser.add_argument("--dpi", type=int, default=150, help="Rendering DPI")
     pdf_parser.add_argument("--no-enhance", action="store_true", help="Disable adaptive vision enhancement")
     pdf_parser.add_argument("--no-repair", action="store_true", help="Disable orthographic spell correction")
+    pdf_parser.add_argument(
+        "--document-year", type=int, default=None,
+        help="Year of the document. Enables the MLC 2003 dictionary pass when >= 1900 "
+             "(modern standard Burmese). Leave unset for archaic or unknown-date text.",
+    )
+    pdf_parser.add_argument(
+        "--use-dictionary", action="store_true",
+        help="Force the MLC 2003 dictionary pass on (modern standard Burmese only).",
+    )
 
     args = parser.parse_args()
 
@@ -48,6 +66,8 @@ def main():
             model=args.model,
             enhance=not args.no_enhance,
             repair=not args.no_repair,
+            document_year=args.document_year,
+            use_dictionary=args.use_dictionary or None,
         )
         print(res.text)
 
@@ -63,6 +83,8 @@ def main():
             dpi=args.dpi,
             enhance=not args.no_enhance,
             repair=not args.no_repair,
+            document_year=args.document_year,
+            use_dictionary=args.use_dictionary or None,
         )
         if not args.output:
             print(md)
