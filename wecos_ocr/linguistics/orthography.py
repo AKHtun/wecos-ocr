@@ -45,6 +45,11 @@ _OCR_LIGATURE_FIXES = {
     'ခုရင်ကောက်': 'ဍရင်ကောက်',
 }
 
+# Modern standard Burmese orthography (MLC 2003) only settled in the 20th century, so the
+# dictionary pass in repair_ocr_text() is valid for nothing written earlier. See that
+# docstring for the measurements behind making it opt-in.
+MODERN_BURMESE_FROM = 1900
+
 # Common monosyllabic Burmese verbs & basic words
 _COMMON_BASE_WORDS: set[str] = {
     "တက်", "ဆင်း", "သွား", "လာ", "စား", "သောက်", "ဝတ်", "နေ", "ထိုင်", "အိပ်",
@@ -153,10 +158,35 @@ class MyanmarOrthographyGuard:
 
         return sorted(list(candidates))[:max_suggestions]
 
-    def repair_ocr_text(self, text: str) -> tuple[str, dict[str, int]]:
-        """Repair OCR text using dictionary-guided confusion-pair swapping and syllable validation."""
+    def repair_ocr_text(
+        self,
+        text: str,
+        *,
+        document_year: Optional[int] = None,
+        use_dictionary: Optional[bool] = None,
+    ) -> tuple[str, dict[str, int]]:
+        """Repair OCR text: the literal ligature table always, the dictionary guesser only if asked.
+
+        The dictionary pass rewrites every token missing from the ~11k-word MLC list with its
+        nearest dictionary-accepted confusion-pair variant. Measured 2026-09-15 on the 38-leaf
+        WZ-HI-3902 parabaik (40,046 chars): it rewrites 0.2%-5.6% of characters per leaf, 1.9%
+        corpus-wide, and the rate does NOT track any text-intrinsic signal -- per-leaf dictionary
+        coverage spans 32%-57% with the least- and most-damaged leaves fully overlapping, so a
+        caller-side coverage test cannot stand in for knowing the document's date.
+
+        The low character rate understates the harm: the substitutions are semantic, not noisy.
+        `ခုနှစ်` ("year") becomes `ဒုနှစ်` (nonsense) because ('ခ','ဒ') is the first confusion pair,
+        which silently corrupts dates in exactly the historical documents a modern word list
+        cannot adjudicate. It is therefore OFF unless the caller asserts the document is modern
+        standard Burmese, via `use_dictionary` or a `document_year`.
+        """
+        lexical = use_dictionary
+        if lexical is None:
+            lexical = document_year is not None and document_year >= MODERN_BURMESE_FROM
+
         if not self._loaded or not text.strip():
-            return text, {"total_tokens": 0, "dict_hits": 0, "repairs": 0, "oov_tokens": 0}
+            return text, {"total_tokens": 0, "dict_hits": 0, "repairs": 0,
+                          "oov_tokens": 0, "lexical": int(bool(lexical))}
 
         lines_out: list[str] = []
         total_tokens = 0
@@ -173,6 +203,10 @@ class MyanmarOrthographyGuard:
                 if err in clean_line:
                     clean_line = clean_line.replace(err, fix)
                     repairs += 1
+
+            if not lexical:
+                lines_out.append(clean_line)
+                continue
 
             tokens = self.segment_maxmatch(clean_line)
             repaired_tokens: list[str] = []
@@ -205,6 +239,7 @@ class MyanmarOrthographyGuard:
             "dict_hits": dict_hits,
             "repairs": repairs,
             "oov_tokens": oov_tokens,
+            "lexical": int(bool(lexical)),
         }
         return "\n".join(lines_out), telemetry
 
@@ -217,5 +252,12 @@ def get_myanmar_orthography_guard() -> MyanmarOrthographyGuard:
         _instance = MyanmarOrthographyGuard()
     return _instance
 
-def repair_ocr_spelling(text: str) -> tuple[str, dict[str, int]]:
-    return get_myanmar_orthography_guard().repair_ocr_text(text)
+def repair_ocr_spelling(
+    text: str,
+    *,
+    document_year: Optional[int] = None,
+    use_dictionary: Optional[bool] = None,
+) -> tuple[str, dict[str, int]]:
+    return get_myanmar_orthography_guard().repair_ocr_text(
+        text, document_year=document_year, use_dictionary=use_dictionary
+    )

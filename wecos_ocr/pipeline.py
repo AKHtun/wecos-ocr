@@ -36,10 +36,17 @@ def transcribe(
     model: str = "wecos-myanmar-ocr-qwen3:8b",
     enhance: bool = True,
     repair: bool = True,
+    document_year: Optional[int] = None,
+    use_dictionary: Optional[bool] = None,
     prompt: Optional[str] = None,
     **backend_kwargs,
 ) -> OCRResult:
-    """Transcribe a single image or image file into clean Myanmar Unicode text."""
+    """Transcribe a single image or image file into clean Myanmar Unicode text.
+
+    `repair` runs the literal OCR ligature table. The dictionary guesser -- which rewrites OOV
+    tokens against a modern MLC word list -- runs only when `document_year` >= 1900 or
+    `use_dictionary=True`. Leave both unset for anything not modern printed Burmese.
+    """
     # 1. Load image
     if isinstance(input_source, (str, Path)):
         img = Image.open(input_source)
@@ -72,7 +79,9 @@ def transcribe(
     telemetry: Dict[str, Any] = {"enhanced_vision": enhanced_applied}
 
     if repair:
-        repaired_text, rep_telem = repair_ocr_spelling(repaired_text)
+        repaired_text, rep_telem = repair_ocr_spelling(
+            repaired_text, document_year=document_year, use_dictionary=use_dictionary
+        )
         telemetry.update(rep_telem)
 
     sylls = segment_syllables(repaired_text)
@@ -94,6 +103,8 @@ def convert_pdf_to_md(
     dpi: int = 150,
     enhance: bool = True,
     repair: bool = True,
+    document_year: Optional[int] = None,
+    use_dictionary: Optional[bool] = None,
 ) -> str:
     """Convert a multi-page PDF book into clean, assembled Markdown."""
     try:
@@ -121,6 +132,8 @@ def convert_pdf_to_md(
             model=model,
             enhance=enhance,
             repair=repair,
+            document_year=document_year,
+            use_dictionary=use_dictionary,
         )
         pages_md.append(f"## Page {i + 1}\n\n{res.text}")
 
