@@ -13,6 +13,7 @@ jobs:
       url: https://pypi.org/p/wecos-ocr
     permissions:
       id-token: write
+      contents: write
 
     steps:
     - uses: actions/checkout@v4
@@ -35,3 +36,13 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         skip-existing: true
+
+    # A release page with zero assets is a dead end for anyone who cannot reach
+    # PyPI, so the same distributions are attached to the GitHub release as well.
+    # Runs last and on failure, so a broken asset upload can never block the
+    # PyPI publish above.
+    - name: Attach distributions to the GitHub release
+      if: always() && hashFiles('dist/*') != ''
+      uses: softprops/action-gh-release@v2
+      with:
+        files: dist/*
